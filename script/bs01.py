@@ -74,6 +74,14 @@ def tryThings() :
               lA = lTDname.a
               if not lA == None :
                 #print lA
+                lsUrl = lA[ 'href' ]
+                print lsUrl
+                liPos = lsUrl.find( 'userid=' )
+                if liPos >= 0 :
+                  lsUserId = lsUrl[ liPos + 7 : ].split( '&' )[ 0 ]
+                  print lsUserId
+                  if len( lsUserId ) < 5 : continue
+                else : continue
                 lBA = lA.b
                 if not lBA == None :
                   #print lBA
@@ -87,7 +95,7 @@ def tryThings() :
                     print "not a number, not a valid ranking"
                     continue
                   liPoints = 100 - liRanking
-                  lRanking.append( ( lsPlayer, liRanking ) )
+                  lRanking.append( ( lsUserId, liRanking, lsPlayer ) )
 
 
               else :
