@@ -108,6 +108,19 @@ def tryThings() :
   return lDictRanking
 
 
+def sumDictRanking( pDict1, pDict2 ) :
+
+  # lists
+  lKeys1 = pDict1.keys()
+  lKeys2 = pDict2.keys()
+
+  lKeys = list( lKeys1 ) # duplicate, not a pointer
+  lKeys.extend( lKeys2 ) # still a list
+  lSetKeys = set( lKeys ) # removes duplicates
+
+  lDictRanking[ lsUserId ] = ( liRanking, lsPlayer )
+
+
 
 initObjects()
 initParse()
