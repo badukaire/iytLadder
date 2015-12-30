@@ -49,7 +49,7 @@ def prettyprint() :
 
 def tryThings() :
 
-  lRanking = []
+  lDictRanking = {}
   global gBeautifulSoup
   for lSeekCaption in gBeautifulSoup.find_all( "caption" ) :
     print lSeekCaption
@@ -94,15 +94,19 @@ def tryThings() :
                   except :
                     print "not a number, not a valid ranking"
                     continue
-                  liPoints = 100 - liRanking
-                  lRanking.append( ( lsUserId, liRanking, lsPlayer ) )
 
+                  # this should be on the wrapper
+                  liPoints = 100 - liRanking
+
+                  # store
+                  lDictRanking[ lsUserId ] = ( liRanking, lsPlayer )
 
               else :
                 print "ERROR, no TD with link found"
           print '--'
 
-  print lRanking
+  return lDictRanking
+
 
 
 initObjects()
