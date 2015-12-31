@@ -31,17 +31,21 @@ usage examples:
 '''
 class IYTladderRank :
 
-  def __init__( self ) :
+  def __init__( self, psId = None ) :
     self.mBeautifulSoup = None
     self.msFilename = None
+    self.msId = psId
 
 
-  def initObjects( self, psFile = None ) :
+  def initObjects( self ) :
 
-    if psFile == None :
+    if self.msId == None :
       self.msFilename = 'iytLadderTop50.html'
+      self.msPickleFile = 'pickle.dat'
     else :
-      self.msFilename = psFile
+      self.msFilename = 'i' + self.msId + '.html'
+      self.msPickleFile = 'p' + self.msId + '.dat'
+    print 'input:%s - output:%s' % ( self.msFilename, self.msPickleFile )
 
 
   def initParse( self ) :
@@ -105,6 +109,7 @@ class IYTladderRank :
                     #print lBA
                     for ls in lBA.strings :
                       lsPlayer = ls # get last one, avoid optional 'member' symbol
+                    lsPlayer = str( lsPlayer ) # convert to str, no unicode, thx
                     print "ranking:", lsRanking
                     print "player:", lsPlayer
                     try :
@@ -131,6 +136,45 @@ class IYTladderRank :
 
 
 
+  def fpick_retrieve( self ) :
+
+    liRet = 0 # OK
+    try :
+
+      lFile = open( self.msPickleFile )
+      try :
+        lDict = pickle.load( lFile )
+        self.mDictRanking = lDict # to prevent errors while reading
+      except :
+        print 'fpick_retrieve.read(), corrupted file ' + self.msPickleFile
+
+      lFile.close()
+
+    except IOError :
+      liRet = 1 # error
+
+    return liRet
+
+
+
+  def fpick_store( self ) :
+
+    liRet = 0 # OK
+    try :
+
+      lFile = open( self.msPickleFile, 'w' )
+      pickle.dump( self.mDictRanking, lFile )
+
+      lFile.close()
+
+    except IOError :
+      liRet = 1 # error
+      print 'fpick_store(), corrupted file ' + self.msPickleFile
+
+    return liRet
+
+
+
   @staticmethod
   def sumDictRanking( pDict1, pDict2 ) :
 
@@ -146,17 +190,28 @@ class IYTladderRank :
 
 
 
-  def process( self, psFile = None ) :
+  def process( self ) :
 
-    self.initObjects( psFile ) # may pass a file name here
+    self.initObjects()
     self.mBeautifulSoup = self.initParse()
     if not self.mBeautifulSoup == None :
       self.mDictRanking = self.parseRanking()
+      if not self.mDictRanking == None :
+        self.fpick_store()
+        self.mDictRanking = None
+        self.fpick_retrieve()
+        print self.mDictRanking
+
+
 
 
 if __name__ == "__main__":
 
-  lIYTladderRank = IYTladderRank()
+
+  if len( sys.argv ) == 1 :
+    lIYTladderRank = IYTladderRank()
+  else :
+    lIYTladderRank = IYTladderRank( sys.argv[ 1 ] )
   lIYTladderRank.process()
 
 
