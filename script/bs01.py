@@ -20,7 +20,8 @@ usage examples:
 # use default input and output file names: iytLadderTop50.html and pickle.dat
 % python s.py 
 
-# use alphanumeric suffix for input and output filenames: i000.html and p000.dat
+# use alphanumeric ID for input (html) and output (dat) filenames, in
+# this case i000.html is expected as input and output is sent to p000.dat
 % python s.py 000
 # same, with i0001.html and p001.html
 % python s.py 001
@@ -31,10 +32,14 @@ usage examples:
 '''
 class IYTladderRank :
 
+
   def __init__( self, psId = None ) :
+
     self.mBeautifulSoup = None
     self.msFilename = None
     self.msId = psId
+
+    self.initObjects()
 
 
   def initObjects( self ) :
@@ -123,7 +128,8 @@ class IYTladderRank :
                     liPoints = 100 - liRanking
 
                     # store
-                    lDictRanking[ lsUserId ] = ( liRanking, lsPlayer )
+                    # 1 is number of appearences, will be used for the sum
+                    lDictRanking[ lsUserId ] = ( liRanking, 1, lsPlayer )
 
                 else :
                   print "ERROR, no TD with link found"
@@ -186,13 +192,62 @@ class IYTladderRank :
     lKeys.extend( lKeys2 ) # still a list
     lSetKeys = set( lKeys ) # removes duplicates
 
-    lDictRanking[ lsUserId ] = ( liRanking, lsPlayer )
+    lDictSum = {}
+    for liKey in lSetKeys :
+      try :
+        lD1 = pDict1[ liKey ]
+        liRank1  = lD1[ 0 ]
+        liTimes1 = lD1[ 1 ]
+        lsName1  = lD1[ 2 ]
+      except :
+        liRank1  = 0
+        liTimes1 = 0
+        lsName1  = '-'
+      try :
+        lD2 = pDict2[ liKey ]
+        liRank2  = lD2[ 0 ]
+        liTimes2 = lD2[ 1 ]
+        lsName2  = lD2[ 2 ]
+      except :
+        liRank2  = 0
+        liTimes2 = 0
+        lsName2  = '-'
+      print '%s : %d + %d, %d + %d, %s / %s ' % ( liKey, liRank1, liRank2 , liTimes1, liTimes2 , lsName1, lsName2 )
+      liSumRank  = liRank1  + liRank2
+      liSumTimes = liTimes1 + liTimes2
+      lsSumName  = lsName2 if not lsName2 == '-' else lsName1
+      lTuple = ( liSumRank, liSumTimes, lsSumName )
+      print 'sum : %d, %d, %s ' % lTuple
+
+      lDictSum[ liKey ] = lTuple
+
+    # return None if error ...
+    return lDictSum
+
+
+
+  @staticmethod
+  def readDicts( psId1, psId2 ) :
+
+    lIYTladderRank1 = IYTladderRank( psId1 )
+    lIYTladderRank2 = IYTladderRank( psId2 )
+    lIYTladderRankSum = IYTladderRank()
+
+    lIYTladderRank1.fpick_retrieve()
+    lIYTladderRank2.fpick_retrieve()
+
+    lDict1 = lIYTladderRank1.mDictRanking
+    lDict2 = lIYTladderRank2.mDictRanking
+
+    lDict = IYTladderRank.sumDictRanking( lDict1, lDict2 )
+    if not lDict == None :
+      lIYTladderRankSum.mDictRanking = lDict
+      lIYTladderRankSum.fpick_store()
 
 
 
   def process( self ) :
 
-    self.initObjects()
     self.mBeautifulSoup = self.initParse()
     if not self.mBeautifulSoup == None :
       self.mDictRanking = self.parseRanking()
@@ -208,10 +263,13 @@ class IYTladderRank :
 if __name__ == "__main__":
 
 
-  if len( sys.argv ) == 1 :
-    lIYTladderRank = IYTladderRank()
+  if len( sys.argv ) > 2 :
+    IYTladderRank.readDicts( sys.argv[ 1 ], sys.argv[ 2 ] )
   else :
-    lIYTladderRank = IYTladderRank( sys.argv[ 1 ] )
-  lIYTladderRank.process()
+    if len( sys.argv ) == 1 :
+      lIYTladderRank = IYTladderRank()
+    else :
+      lIYTladderRank = IYTladderRank( sys.argv[ 1 ] )
+    lIYTladderRank.process()
 
 
