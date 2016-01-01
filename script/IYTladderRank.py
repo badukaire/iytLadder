@@ -1,6 +1,7 @@
 import sys
 from bs4 import BeautifulSoup
 import pickle
+import math
 
 #
 # TODO
@@ -132,13 +133,13 @@ class IYTladderRank :
                       print "not a number, not a valid ranking"
                       continue
 
-                    # this should be on the wrapper
-                    # it could also be negative exponential
-                    liPoints = 100 - liRanking
+                    liPointsNegexp = IYTladderRank.pointsNegexp( liRanking )
+                    liPointsLinear = IYTladderRank.pointsLinear( liRanking )
 
                     # store
                     # 1 is number of appearences, will be used for the sum
-                    lDictRanking[ lsUserId ] = ( liRanking, 1, lsPlayer )
+                    lTuple = ( liRanking, 1, liPointsNegexp, liPointsLinear, lsPlayer )
+                    lDictRanking[ lsUserId ] = lTuple
 
                 else :
                   print "ERROR, no TD with link found"
@@ -216,26 +217,36 @@ class IYTladderRank :
         lD1 = pDict1[ liKey ]
         liRank1  = lD1[ 0 ]
         liTimes1 = lD1[ 1 ]
-        lsName1  = lD1[ 2 ]
+        liPexp1  = lD1[ 2 ]
+        liPlin1  = lD1[ 3 ]
+        lsName1  = lD1[ 4 ]
       except :
         liRank1  = 0
         liTimes1 = 0
+        liPexp1  = 0
+        liPlin1  = 0
         lsName1  = '-'
       try :
         lD2 = pDict2[ liKey ]
         liRank2  = lD2[ 0 ]
         liTimes2 = lD2[ 1 ]
-        lsName2  = lD2[ 2 ]
+        liPexp2  = lD2[ 2 ]
+        liPlin2  = lD2[ 3 ]
+        lsName2  = lD2[ 4 ]
       except :
         liRank2  = 0
         liTimes2 = 0
+        liPexp2  = 0
+        liPlin2  = 0
         lsName2  = '-'
       print '%s : %d + %d, %d + %d, %s / %s ' % ( liKey, liRank1, liRank2 , liTimes1, liTimes2 , lsName1, lsName2 )
-      liSumRank  = liRank1  + liRank2
+      liSumRank  = liRank1 + liRank2
       liSumTimes = liTimes1 + liTimes2
       lsSumName  = lsName2 if not lsName2 == '-' else lsName1
-      lTuple = ( liSumRank, liSumTimes, lsSumName )
-      print 'sum : %d, %d, %s ' % lTuple
+      liSumPexp = liPexp1 + liPexp2
+      liSumPlin = liPlin1 + liPlin2
+      lTuple = ( liSumRank, liSumTimes, liSumPexp, liSumPlin, lsSumName )
+      IYTladderRank.displayPlayer( lTuple )
 
       lDictSum[ liKey ] = lTuple
 
@@ -255,11 +266,12 @@ class IYTladderRank :
     lIYTladderRank1 = IYTladderRank( lsId1 )
     lIYTladderRank1.fpick_retrieve()
 
-    for lsId in pListIds[ 1 : ] :
-      if lsId == '-' :
-        lIYTladderRank1.displayDict()
-        break
-      else :
+    lsId = pListIds[ 1 ]
+    if lsId[ 0 ] == '-' :
+      lsDisplayMode = None if len( lsId ) == 1 else lsId[ 1 ]
+      lIYTladderRank1.displayDict( lsDisplayMode )
+    else :
+      for lsId in pListIds[ 1 : ] :
         lIYTladderRank2 = IYTladderRank( lsId )
         lIYTladderRank2.fpick_retrieve()
 
@@ -270,10 +282,52 @@ class IYTladderRank :
         if not lDict == None :
           lIYTladderRank1.mDictRanking = lDict
 
-          # used for storage only
-          lIYTladderRankSum.mDictRanking = lIYTladderRank1.mDictRanking
-          lIYTladderRankSum.fpick_store()
+      lIYTladderRankSum.mDictRanking = lIYTladderRank1.mDictRanking
+      # average
+      liNum = len( pListIds )
+      for lKey in lIYTladderRankSum.mDictRanking.keys() :
+        lPlayer = lIYTladderRankSum.mDictRanking[ lKey ]
+        lPlayer2 = (
+          lPlayer[ 0 ] / lPlayer[ 1 ],
+          lPlayer[ 1 ],
+          lPlayer[ 2 ] / liNum,
+          lPlayer[ 3 ] / liNum,
+          lPlayer[ 4 ],
+        )
+        lIYTladderRankSum.mDictRanking[ lKey ] = lPlayer2
 
+      lIYTladderRankSum.fpick_store()
+
+
+
+  # negative exponential function
+  # yields :
+  # * 100 for 1
+  # * 1 for 50
+  # * 0 for 51
+  @staticmethod
+  def pointsNegexp( iRank ) :
+    lfMagnifier = 1.0
+    lfMagicConstant = 10.640215
+    lfExp = ( 1 - iRank ) * lfMagnifier / lfMagicConstant
+    #print 'exp =', lfExp
+    lfBase = ( math.e ** lfExp )
+    lfPoints = 100*lfBase
+    liPoints = int( lfPoints )
+    print lfPoints, liPoints
+    return liPoints
+
+
+  # negative exponential function
+  # yields :
+  # * 100 for 1
+  # * 1 for 50
+  # * 0 for 51
+  @staticmethod
+  def pointsLinear( iRank ) :
+    liPoints = 100 - 2 * ( iRank - 1 )
+    print liPoints
+    return liPoints
 
 
   def process( self ) :
@@ -292,6 +346,14 @@ class IYTladderRank :
 
 if __name__ == "__main__":
 
+  
+  '''
+  # exp test
+  IYTladderRank.pointsNegexp( int( sys.argv[ 1 ] ) )
+  # linear test
+  IYTladderRank.pointsLinear( int( sys.argv[ 1 ] ) )
+  sys.exit(0)
+  '''
 
   if len( sys.argv ) > 2 :
     # 1 : may change when getopt is used
