@@ -5,11 +5,8 @@ import pickle
 #
 # TODO
 #
-# * no surto a la llista, no suma tothom!
 # * handle pickle retrieve/store exceptions!!!
 #
-# * sum a set of files, not just 2
-# * read dat file
 # * are points (rating) part of dat data?
 # * calculate ratings, beyond sum
 # * output results
@@ -120,12 +117,13 @@ class IYTladderRank :
                     print lsUserId
                     if len( lsUserId ) < 5 : continue
                   else : continue
-                  lBA = lA.b
-                  if not lBA == None :
-                    #print lBA
-                    for ls in lBA.strings :
-                      lsPlayer = ls # get last one, avoid optional 'member' symbol
-                    lsPlayer = str( lsPlayer ) # convert to str, no unicode, thx
+                  if not lA == None :
+                    for ls in lA.strings : # 'ISO-8859-1'
+                      try :
+                        lsPlayer = str( ls ) # get last one, avoid optional 'member' symbol
+                      except :
+                        lsPlayer = '--utf--'
+                      print lsPlayer
                     print "ranking:", lsRanking
                     print "player:", lsPlayer
                     try :
@@ -210,6 +208,7 @@ class IYTladderRank :
     lKeys = list( lKeys1 ) # duplicate, not a pointer
     lKeys.extend( lKeys2 ) # still a list
     lSetKeys = set( lKeys ) # removes duplicates
+    print 'keys: %d, %d : %d' % ( len( lKeys1 ), len( lKeys2 ), len( lSetKeys ) )
 
     lDictSum = {}
     for liKey in lSetKeys :
