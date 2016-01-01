@@ -2,9 +2,14 @@ import sys
 from bs4 import BeautifulSoup
 import pickle
 
-
 #
-# TODO sum a set of files, not just 2
+# TODO
+#
+# * sum a set of files, not just 2
+# * read dat file
+# * are points (rating) part of dat data?
+# * calculate ratings, beyond sum
+# * output results
 #
 '''
 parses the html file resulting from a query of the first 50 players
@@ -18,16 +23,16 @@ it has 2 typical usage modes:
 usage examples: 
 
 # use default input and output file names: iytLadderTop50.html and pickle.dat
-% python s.py 
+% python IYTladderRank.py 
 
 # use alphanumeric ID for input (html) and output (dat) filenames, in
 # this case i000.html is expected as input and output is sent to p000.dat
-% python s.py 000
+% python IYTladderRank.py 000
 # same, with i0001.html and p001.html
-% python s.py 001
+% python IYTladderRank.py 001
 
-# sum 2 dat files (p000.dat, p001.dat) and store in pickle.dat
-% python s.py 000 001
+# sum 2 dat files (p000.dat, p001.dat) and store result in pickle.dat
+% python IYTladderRank.py 000 001
 
 '''
 class IYTladderRank :
@@ -75,7 +80,7 @@ class IYTladderRank :
 
 
 
-  def parseRanking( self ) :
+  def parseHtmlRanking( self ) :
 
     lDictRanking = {}
     for lSeekCaption in self.mBeautifulSoup.find_all( "caption" ) :
@@ -227,7 +232,7 @@ class IYTladderRank :
 
 
   @staticmethod
-  def readDicts( psId1, psId2 ) :
+  def readSum( psId1, psId2 ) :
 
     lIYTladderRank1 = IYTladderRank( psId1 )
     lIYTladderRank2 = IYTladderRank( psId2 )
@@ -250,7 +255,7 @@ class IYTladderRank :
 
     self.mBeautifulSoup = self.initParse()
     if not self.mBeautifulSoup == None :
-      self.mDictRanking = self.parseRanking()
+      self.mDictRanking = self.parseHtmlRanking()
       if not self.mDictRanking == None :
         self.fpick_store()
         self.mDictRanking = None
@@ -264,7 +269,7 @@ if __name__ == "__main__":
 
 
   if len( sys.argv ) > 2 :
-    IYTladderRank.readDicts( sys.argv[ 1 ], sys.argv[ 2 ] )
+    IYTladderRank.readSum( sys.argv[ 1 ], sys.argv[ 2 ] )
   else :
     if len( sys.argv ) == 1 :
       lIYTladderRank = IYTladderRank()
