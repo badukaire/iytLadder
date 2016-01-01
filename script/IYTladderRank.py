@@ -8,10 +8,6 @@ import math
 #
 # * handle pickle retrieve/store exceptions!!!
 #
-# * are points (rating) part of dat data?
-# * calculate ratings, beyond sum
-# * output results
-#
 '''
 parses the html file resulting from a query of the first 50 players
 on a IYT ladder, with a URL such as:
@@ -152,12 +148,42 @@ class IYTladderRank :
 
 
 
-  def displayDict( self ) :
+  # depending on the value of sDisplayMode :
+  # - None : sorts by player id
+  # - '-'  : sorts by average ranking
+  # - 'e'  : sorts by exponential points
+  # - 'l'  : sorts by linear points
+  def displayDict( self, sDisplayMode ) :
+
+    print 'ranked players =', len( self.mDictRanking )
     # TODO : use pretty
     lList = self.mDictRanking.keys()
-    lList.sort()
-    for lKey in lList :
-      print lKey, self.mDictRanking[ lKey ]
+    if sDisplayMode == None :
+      lList.sort()
+      for lKey in lList :
+        print lKey, self.mDictRanking[ lKey ]
+    else : # sort by some mode
+      if sDisplayMode == '-' :
+        liSortKey = 0 # tuple pos of average ranking
+        lbReverse = False
+      if sDisplayMode == 'e' :
+        liSortKey = 2 # tuple pos of exponential points
+        lbReverse = True
+      if sDisplayMode == 'l' :
+        liSortKey = 3 # tuple pos of linear points
+        lbReverse = True
+
+      lList1 = []
+      for lKey in lList :
+        lTuple = self.mDictRanking[ lKey ]
+        lList1.append( lTuple )
+      # print lList1
+      print '============'
+      lListSorted = sorted( lList1, key = lambda tup : tup[ liSortKey ], reverse = lbReverse )
+      for lPlayerTuple in lListSorted :
+        IYTladderRank.displayPlayer( lPlayerTuple )
+
+
 
 
   def fpick_retrieve( self ) :
@@ -252,6 +278,15 @@ class IYTladderRank :
 
     # return None if error ...
     return lDictSum
+
+
+
+  @staticmethod
+  def displayPlayer( pPlayerTuple ) :
+    if len( pPlayerTuple ) == 5 :
+      print '#%03d (%02d) = %4d - %4d %s' % pPlayerTuple
+    else :
+      print 'N/A'
 
 
 
