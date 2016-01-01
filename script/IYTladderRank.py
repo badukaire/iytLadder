@@ -5,6 +5,9 @@ import pickle
 #
 # TODO
 #
+# * no surto a la llista, no suma tothom!
+# * handle pickle retrieve/store exceptions!!!
+#
 # * sum a set of files, not just 2
 # * read dat file
 # * are points (rating) part of dat data?
@@ -33,6 +36,9 @@ usage examples:
 
 # sum 2 dat files (p000.dat, p001.dat) and store result in pickle.dat
 % python IYTladderRank.py 000 001
+
+# view 1 dat file, using special 2nd id '-' meaning none
+% python IYTladderRank.py 000 -
 
 '''
 class IYTladderRank :
@@ -147,22 +153,30 @@ class IYTladderRank :
 
 
 
+  def displayDict( self ) :
+    # TODO : use pretty
+    lList = self.mDictRanking.keys()
+    lList.sort()
+    for lKey in lList :
+      print lKey, self.mDictRanking[ lKey ]
+
+
   def fpick_retrieve( self ) :
 
     liRet = 0 # OK
     try :
-
       lFile = open( self.msPickleFile )
       try :
         lDict = pickle.load( lFile )
         self.mDictRanking = lDict # to prevent errors while reading
       except :
         print 'fpick_retrieve.read(), corrupted file ' + self.msPickleFile
-
       lFile.close()
 
     except IOError :
       liRet = 1 # error
+      print 'FATAL: fpick_retrieve.read(), could not read file ' + self.msPickleFile
+      raise # while not implemented exception / return code handling
 
     return liRet
 
@@ -231,23 +245,35 @@ class IYTladderRank :
 
 
 
+  # note: at least 2 guaranteed (script syntax) => need not check len
+  # if 2nd is '-' will just read and display the 1st
   @staticmethod
-  def readSum( psId1, psId2 ) :
+  def readSum( pListIds ) :
 
-    lIYTladderRank1 = IYTladderRank( psId1 )
-    lIYTladderRank2 = IYTladderRank( psId2 )
     lIYTladderRankSum = IYTladderRank()
 
+    lsId1 = pListIds[ 0 ]
+    lIYTladderRank1 = IYTladderRank( lsId1 )
     lIYTladderRank1.fpick_retrieve()
-    lIYTladderRank2.fpick_retrieve()
 
-    lDict1 = lIYTladderRank1.mDictRanking
-    lDict2 = lIYTladderRank2.mDictRanking
+    for lsId in pListIds[ 1 : ] :
+      if lsId == '-' :
+        lIYTladderRank1.displayDict()
+        break
+      else :
+        lIYTladderRank2 = IYTladderRank( lsId )
+        lIYTladderRank2.fpick_retrieve()
 
-    lDict = IYTladderRank.sumDictRanking( lDict1, lDict2 )
-    if not lDict == None :
-      lIYTladderRankSum.mDictRanking = lDict
-      lIYTladderRankSum.fpick_store()
+        lDict1 = lIYTladderRank1.mDictRanking
+        lDict2 = lIYTladderRank2.mDictRanking
+
+        lDict = IYTladderRank.sumDictRanking( lDict1, lDict2 )
+        if not lDict == None :
+          lIYTladderRank1.mDictRanking = lDict
+
+          # used for storage only
+          lIYTladderRankSum.mDictRanking = lIYTladderRank1.mDictRanking
+          lIYTladderRankSum.fpick_store()
 
 
 
@@ -269,7 +295,8 @@ if __name__ == "__main__":
 
 
   if len( sys.argv ) > 2 :
-    IYTladderRank.readSum( sys.argv[ 1 ], sys.argv[ 2 ] )
+    # 1 : may change when getopt is used
+    IYTladderRank.readSum( sys.argv[ 1 : ] )
   else :
     if len( sys.argv ) == 1 :
       lIYTladderRank = IYTladderRank()
